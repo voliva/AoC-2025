@@ -58,7 +58,7 @@ async fn download(selected_day: usize) -> Result<(), Box<dyn std::error::Error>>
 
     let body = client
         .get(format!(
-            "https://adventofcode.com/2024/day/{selected_day}/input"
+            "https://adventofcode.com/2025/day/{selected_day}/input"
         ))
         .send()
         .await?
