@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader};
 
 pub struct Problem;
 
-// 23:29 23:42
+// 23:29 23:42 23:56
 
 impl Solver for Problem {
     type Input = Vec<PProblem>;
@@ -14,33 +14,40 @@ impl Solver for Problem {
     type Output2 = usize;
 
     fn read_input(&self, file_reader: BufReader<&File>) -> Self::Input {
-        let lines = file_reader.lines().map(|x| x.unwrap());
+        let lines = file_reader.lines().map(|x| x.unwrap()).collect_vec();
 
-        let mut parsed_values: Vec<Vec<usize>> = vec![];
+        let mut transposed_lines: Vec<String> = vec![];
+        for c in 0..lines[0].len() {
+            transposed_lines.push(lines.iter().map(|l| &l[c..=c]).collect());
+        }
 
         let mut problems = vec![];
+        let mut i = 0;
+        while i < transposed_lines.len() {
+            let line = &transposed_lines[i];
+            i += 1;
 
-        for l in lines {
-            if l.starts_with("+") || l.starts_with("*") {
-                let operations = l
-                    .split(" ")
-                    .filter(|v| v.len() > 0)
-                    .map(|v| if v == "+" { Operand::Add } else { Operand::Mul })
-                    .collect_vec();
+            if line.len() == 0 {
+                continue;
+            }
+            if line.ends_with("+") || line.ends_with("*") {
+                let mut problem = PProblem {
+                    operation: if line.ends_with("+") {
+                        Operand::Add
+                    } else {
+                        Operand::Mul
+                    },
+                    values: vec![line[0..line.len() - 1].trim().parse().unwrap()],
+                };
 
-                for i in 0..operations.len() {
-                    problems.push(PProblem {
-                        values: parsed_values.iter().map(|v| v[i]).collect_vec(),
-                        operation: operations[i].clone(),
-                    });
+                while i < transposed_lines.len() && transposed_lines[i].trim().len() != 0 {
+                    problem
+                        .values
+                        .push(transposed_lines[i].trim().parse().unwrap());
+                    i += 1;
                 }
-            } else {
-                parsed_values.push(
-                    l.split(" ")
-                        .filter(|v| v.len() > 0)
-                        .map(|v| v.parse().unwrap())
-                        .collect_vec(),
-                );
+
+                problems.push(problem);
             }
         }
 
@@ -51,7 +58,7 @@ impl Solver for Problem {
         Ok(input.into_iter().map(|p| p.solve()).sum())
     }
 
-    fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
+    fn solve_second(&self, _input: &Self::Input) -> Result<Self::Output2, String> {
         todo!()
     }
 }
