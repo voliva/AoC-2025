@@ -1,6 +1,7 @@
 use itertools::Itertools;
 
 use super::Solver;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -82,17 +83,8 @@ fn get_count_sl(start: u64, end: u64) -> u64 {
         return 0;
     }
     let period = len / 2;
-    let pow = (10u64).pow(period);
 
-    let (start_v, _) = simplify(start, period, true);
-    let (end_v, _) = simplify(end, period, false);
-
-    let res = {
-        let half_sum: u64 = (start_v..=end_v).sum();
-        half_sum + half_sum * pow
-    };
-
-    res
+    get_id_period(start, end, period, &mut HashSet::new())
 }
 
 fn get_id(start: u64, end: u64) -> u64 {
@@ -122,25 +114,32 @@ fn get_id_sl(start: u64, end: u64) -> u64 {
 
     let mut res = 0;
 
+    let mut seen_values = HashSet::new();
     for period in 1..=len / 2 {
         if len % period != 0 {
             continue;
         }
-        let pow = (10u64).pow(period);
-
-        let (start_v, repeats) = simplify(start, period, true);
-        let (end_v, _) = simplify(end, period, false);
-
-        res += {
-            let partial_sum: u64 = (start_v..=end_v).sum();
-            let repeated = (0..repeats)
-                .map(|_| partial_sum)
-                .reduce(|a, b| a * pow + b)
-                .unwrap();
-            repeated
-        };
+        res += get_id_period(start, end, period, &mut seen_values);
     }
 
+    res
+}
+
+fn get_id_period(start: u64, end: u64, period: u32, seen_values: &mut HashSet<u64>) -> u64 {
+    let pow = (10u64).pow(period);
+
+    let (start_v, repeats) = simplify(start, period, true);
+    let (end_v, _) = simplify(end, period, false);
+
+    let mut res = 0;
+    for v in start_v..=end_v {
+        let value = repeat(v, pow, repeats);
+        // println!("s={start} e={end} p={period} r={repeats} v={v}->{value}");
+        if !seen_values.contains(&value) {
+            seen_values.insert(value);
+            res += value;
+        }
+    }
     res
 }
 
@@ -170,4 +169,12 @@ fn simplify(mut value: u64, period: u32, start: bool) -> (u64, usize) {
     (lead, repeats)
 }
 
-// > 31043429875
+fn repeat(value: u64, pow: u64, repeats: usize) -> u64 {
+    let mut res = 0;
+    for _ in 0..repeats {
+        res = res * pow + value;
+    }
+    res
+}
+
+// larger than 31043429875
