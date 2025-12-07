@@ -2,3 +2,4 @@
 # /inputs/*
 !/inputs/.gitkeep
 .env
+.DS_Store
