@@ -3,6 +3,7 @@
 use std::{cmp::Ordering, fmt::Display};
 
 use auto_ops::{impl_op, impl_op_ex};
+use num::integer::Roots;
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub struct Coordinate(pub isize, pub isize);
@@ -19,8 +20,16 @@ impl Coordinate {
         start.0 <= self.0 && self.0 < end.0 && start.1 <= self.1 && self.1 < end.1
     }
 
-    pub fn euclidean_distance(&self, other: &Coordinate) -> isize {
+    pub fn manhattan_distance(&self, other: &Coordinate) -> isize {
         (self.0 - other.0).abs() + (self.1 - other.1).abs()
+    }
+    pub fn distance_sq(&self, other: &Coordinate) -> isize {
+        let x = self.0 - other.0;
+        let y = self.1 - other.1;
+        x * x + y * y
+    }
+    pub fn distance(&self, other: &Coordinate) -> isize {
+        self.distance_sq(other).sqrt()
     }
 
     pub fn apply_vec<'a, T>(&self, vec: &'a Vec<Vec<T>>) -> Option<&'a T> {

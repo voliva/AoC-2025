@@ -131,6 +131,8 @@ fn get_id_period(start: u64, end: u64, period: u32, seen_values: &mut HashSet<u6
     let (start_v, repeats) = simplify(start, period, true);
     let (end_v, _) = simplify(end, period, false);
 
+    // println!("{start}-{end} {period} => {start_v}-{end_v}");
+
     let mut res = 0;
     for v in start_v..=end_v {
         let value = repeat(v, pow, repeats);
@@ -145,28 +147,38 @@ fn get_id_period(start: u64, end: u64, period: u32, seen_values: &mut HashSet<u6
 
 fn simplify(mut value: u64, period: u32, start: bool) -> (u64, usize) {
     let pow = (10u64).pow(period);
-    let mut lead = 0u64;
-    let mut min = u64::MAX;
-    let mut max = 0u64;
-
-    let mut repeats = 0usize;
+    let mut parts = vec![];
 
     while value > 0 {
-        lead = value % pow;
-        min = lead.min(min);
-        max = lead.max(max);
-
+        let sub_value = value % pow;
+        parts.push(sub_value);
         value /= pow;
-        repeats += 1;
     }
 
-    if start && lead < max {
-        lead += 1;
-    } else if !start && lead > min {
-        lead -= 1;
-    }
+    parts.reverse();
+    let lead = parts[0];
 
-    (lead, repeats)
+    if start {
+        for i in 1..parts.len() {
+            if parts[i] > lead {
+                return (lead + 1, parts.len());
+            }
+            if parts[i] < lead {
+                return (lead, parts.len());
+            }
+        }
+        (lead, parts.len())
+    } else {
+        for i in 1..parts.len() {
+            if parts[i] > lead {
+                return (lead, parts.len());
+            }
+            if parts[i] < lead {
+                return (lead - 1, parts.len());
+            }
+        }
+        (lead, parts.len())
+    }
 }
 
 fn repeat(value: u64, pow: u64, repeats: usize) -> u64 {
